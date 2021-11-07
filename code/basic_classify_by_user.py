@@ -8,19 +8,26 @@ STOP_WORDS = set([w.strip() for w in open("data/stopwords.txt", encoding='utf-8'
 
 
 class Users(object):
-    def __init__(self, user_list):
+    def __init__(self, user_list, user_name, user_gender, user_age):
         self.user_list = user_list
+        self.user_name = user_name
+        self.user_gender = user_gender
+        self.user_age = user_age
 
     def __iter__(self):
-        for user in self.user_list:
+        for user, gender, age in zip(self.user_list, self.user_gender, self.user_age):
             with open(user, encoding='utf-8') as f:
                 user_text = f.read()
-            yield cut_words_with_pos(user_text)
+            print(f"{self.user_list.index(user)} is ok")
+            yield cut_words_with_pos(user_text), gender, age
+
 
 def split_by_user(filepath):
     user_list = []
     user_name_list = []
-    with open('file_name.txt', encoding='utf-8') as f:
+    user_gender_list = []
+    user_age_list = []
+    with open(filepath, encoding='utf-8') as f:
         while True:
             line = f.readline()
             # user_txt = 'data/userdata/'+ line[0:-1]
@@ -29,13 +36,16 @@ def split_by_user(filepath):
             # user_name_list.append(user_name)
             if not line:
                 break
-            user_txt = 'data/userdata/'+ line[0:-1]
-            user_name = re.split(r'.', user_txt)
+            user_txt = 'data/userdata/' + line[0:-1]
+            user_name = line[0:-1].split('.')[0][:-2]
+            user_gender = line[0:-1].split('.')[0][-2:-1]
+            user_age = line[0:-1].split('.')[0][-1]
+
             user_list.append(user_txt)
             user_name_list.append(user_name)
-    return user_list, user_name_list
-
-
+            user_gender_list.append(user_gender)
+            user_age_list.append(user_age)
+    return user_list, user_name_list, user_gender_list, user_age_list
 
 
 def cut_words_with_pos(text):
@@ -46,19 +56,25 @@ def cut_words_with_pos(text):
             res.append(i.word)
     return list(res)
 
+
 def file_test():
-    with open('file_name.txt','w') as f:
+    with open('file_name_male.txt', 'w') as f:
         path = 'data/userdata/'
         files = os.listdir(path)
         files.sort()
 
-        s = []
-        for file in files:
-            if not os.path.isdir(path + file):
-                file_name = str(file)
-                s.append(file_name)
-                f.write(file_name+'\n')
+        # s = []
+        # for file in files:
+        #     if (not os.path.isdir(path + file)) and file[32] == 'F':
+        #         file_name = str(file)
+        #         # s.append(file_name)
+        #         f.write(file_name + '\n')
+
+        for i in range(56000):
+            if files[i][32] == 'M':
+                f.write(files[i] + '\n')
     # print(s)
+
 
 # 过滤词长，过滤停用词，只保留中文
 def is_fine_word(word, min_length=2):
@@ -71,3 +87,4 @@ def is_fine_word(word, min_length=2):
 
 if __name__ == '__main__':
     file_test()
+    # split_by_user('file_name.txt')

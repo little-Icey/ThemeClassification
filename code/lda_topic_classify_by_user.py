@@ -20,21 +20,20 @@ def top_topics(lt):
 
 
 def get_lda_input(users):
-    corpus = [" ".join(word_list) for word_list in users]
+    corpus = [" ".join(user_info[0]) for user_info in users]
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(corpus)
     return X.toarray(), vectorizer
 
 
-def lda_train(weight, vectorizer):
+def lda_train(weight, vectorizer, gender):
     model = lda.LDA(n_topics=15, n_iter=1000, random_state=1)
     model.fit(weight)
 
     doc_num = len(weight)
+    print("doc_num:{}".format(doc_num))
     topic_word = model.topic_word_  # 主题词的频率
-    # print(f"[*] topic word freq:{topic_word}, type is {type(topic_word)}, len is {len(topic_word)}")
     vocab = vectorizer.get_feature_names()
-    # print(f"[*] len:{len(vocab)}, vocab:{vocab}")
     titles = ["User{}".format(i) for i in range(1, doc_num + 1)]
 
     n_top_words = 20
@@ -50,7 +49,7 @@ def lda_train(weight, vectorizer):
     # 提取出的主题 每个用户属于15个主题中某一个的概率
     doc_topic = model.doc_topic_
     print(doc_topic, len(doc_topic), type(doc_topic))
-    filepath = 'data_numpy.csv'
+    filepath = 'output/numpy_data/data_numpy{}.csv'.format(gender)
     np.savetxt(filepath, doc_topic, delimiter=',')
 
     # top5的主题
@@ -74,19 +73,22 @@ def main():
 
 
 def generate_word_cloud():
-    user_list, user_name_list = split_by_user("file_name.txt")
-    users = Users(user_list)
-    weight, vectorizer = get_lda_input(users)
-    words, freqs, top_themes = lda_train(weight, vectorizer)
-    print(f"topic_word_freq:{freqs} len:{len(freqs)}\ntopic_words:{words} len:{len(words)}")
-    print(f"[*] top theme:{top_themes}")
+    user_list, user_name_list, user_gender_list, user_age_list = split_by_user("file_name_male.txt")
+    users = Users(user_list, user_name_list, user_gender_list, user_age_list)
 
-    for i in top_themes:
-        with open(f"output/topics/topic_word_freq{top_themes.index(i)}.csv", 'w', encoding='utf-8') as f:
-            for j in range(20):
-                f.write(f"{words[i][j]}, {freqs[i][j]}\n")
-            f.write('\n')
-    word_cloud.exp()
+    gender = input('[*] input gender>>> ')
+    age = input('[*] input age>>> ')
+    print(f"[+] generate word cloud for {gender}")
+
+    weight, vectorizer = get_lda_input(users)
+    words, freqs, top_themes = lda_train(weight, vectorizer, gender)
+
+    # for i in top_themes:
+    #     with open(f"output/topics/{gender}/topic_word_freq{top_themes.index(i)}.csv", 'w', encoding='utf-8') as f:
+    #         for j in range(30):
+    #             f.write(f"{words[i][j]}, {freqs[i][j]}\n")
+    #         f.write('\n')
+    # word_cloud.exp(gender)
 
 
 if __name__ == '__main__':
